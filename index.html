@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>古文単語穴埋めクイズ（スラッシュ区切りインポート）</title>
+  <style>
+    body { font-family: sans-serif; background: #f7f7fa; padding: 30px; }
+    .container { background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px #ccc; max-width: 430px; margin: auto; }
+    h1 { text-align: center; }
+    #result { margin-top: 14px; font-weight: bold; }
+    input[type="text"] { padding: 10px; font-size: 1.15em; width: 100%; box-sizing: border-box; }
+    button {
+      margin-top: 10px;
+      padding: 10px 22px;
+      font-size: 1.1em;
+      border-radius: 6px;
+      border: none;
+      background: #3577d4;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+      box-shadow: 0 1px 3px #bbb;
+      display: inline-block;
+    }
+    button:hover { background: #285fa0; }
+    .hint { color: #888; font-size: 0.9em; margin-top: 8px; }
+    .kobun { font-size: 1.1em; margin-bottom: 10px; color: #444; }
+    #question { font-size: 1.35em; margin-bottom: 6px; font-weight: bold; color: #222; }
+    #import-area { margin: 24px 0; }
+    textarea { width: 100%; height: 80px; box-sizing: border-box; font-size: 1.05em; padding: 8px; }
+    #import-msg { color: #009900; font-size: 0.95em; margin-top: 4px; }
+    #import-area { display: none; }
+    .btn-row { margin-top: 10px; text-align: left; }
+    .btn-row button { margin-left: 10px; margin-top: 0; }
+    .answer-next-row {
+      margin-top: 10px;
+      text-align: left;
+      display: flex;
+      justify-content: flex-start;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>古文単語穴埋めクイズ</h1>
+    
+    <div id="import-area">
+      <textarea id="import-text" placeholder="例：美しきはうるはしなり,美しきは＿＿だ,うるはし,端正だ/心細きはあはれなり,心細きは＿＿だ,あはれ,しみじみとした情趣/"></textarea>
+      <button onclick="importQuiz()">インポート実行</button>
+      <button onclick="hideImportArea()">キャンセル</button>
+      <div id="import-msg"></div>
+    </div>
+    
+    <div class="kobun" id="kobun"></div>
+    <div id="question"></div>
+    <input type="text" id="answer" placeholder="現代語訳を入力">
+    <div class="answer-next-row">
+      <button onclick="checkAnswer()">答える</button>
+      <button onclick="nextQuestion()">次の問題</button>
+      <button id="import-show-btn" onclick="showImportArea()">インポート</button>
+    </div>
+    <div id="result"></div>
+    <div class="hint" id="hint"></div>
+  </div>
+
+  <script>
+    let quizzes = [
+      { kobun_sentence: "美しきはうるはしなり", sentence: "美しきは＿＿だ", kobun: "うるはし", meaning: "端正だ" },
+      { kobun_sentence: "心細きはあはれなり", sentence: "心細きは＿＿だ", kobun: "あはれ", meaning: "しみじみとした情趣" },
+      { kobun_sentence: "速やかなるはとしなり", sentence: "速やかなるは＿＿だ", kobun: "とし", meaning: "早い" },
+      { kobun_sentence: "いとおかしきはをかしなり", sentence: "いとおかしきは＿＿だ", kobun: "をかし", meaning: "趣がある" }
+    ];
+    let current = 0;
+
+    function showQuestion() {
+      if (quizzes.length === 0) {
+        document.getElementById('kobun').textContent = '';
+        document.getElementById('question').textContent = '';
+        document.getElementById('hint').textContent = '';
+        document.getElementById('result').textContent = 'クイズがありません。インポートしてください。';
+        return;
+      }
+      document.getElementById('kobun').textContent = quizzes[current].kobun_sentence;
+      document.getElementById('question').textContent = quizzes[current].sentence;
+      document.getElementById('answer').value = '';
+      document.getElementById('result').textContent = '';
+      document.getElementById('hint').textContent = `（「${quizzes[current].kobun}」の意味を答えてね）`;
+    }
+
+    function checkAnswer() {
+      if (quizzes.length === 0) return;
+      const ans = document.getElementById('answer').value.trim();
+      if(ans === quizzes[current].meaning) {
+        document.getElementById('result').textContent = "正解！";
+        document.getElementById('result').style.color = "green";
+      } else {
+        document.getElementById('result').textContent = `不正解！正しい答え: ${quizzes[current].meaning}`;
+        document.getElementById('result').style.color = "red";
+      }
+    }
+
+    function nextQuestion() {
+      if (quizzes.length === 0) return;
+      current = (current + 1) % quizzes.length;
+      showQuestion();
+    }
+
+    function showImportArea() {
+      document.getElementById('import-area').style.display = "block";
+      document.getElementById('import-show-btn').style.display = "none";
+      document.getElementById('import-msg').textContent = "";
+      document.getElementById('import-text').value = "";
+    }
+    function hideImportArea() {
+      document.getElementById('import-area').style.display = "none";
+      document.getElementById('import-show-btn').style.display = "inline-block";
+    }
+
+    function importQuiz() {
+      const txt = document.getElementById('import-text').value.trim();
+      // スラッシュ区切りで分割
+      const lines = txt.split('/').map(line => line.trim()).filter(line => line.length > 0);
+      const imported = [];
+      let error = false;
+      lines.forEach((line, idx) => {
+        const parts = line.split(',');
+        if (parts.length !== 4) {
+          error = true;
+        } else {
+          imported.push({ 
+            kobun_sentence: parts[0], 
+            sentence: parts[1], 
+            kobun: parts[2], 
+            meaning: parts[3] 
+          });
+        }
+      });
+      if (error) {
+        document.getElementById('import-msg').textContent = "インポート失敗：1問ごとに「古文,穴埋め文,古文単語,現代語訳」をカンマで区切り、問題ごとにスラッシュで区切ってください";
+        document.getElementById('import-msg').style.color = "red";
+        return;
+      }
+      quizzes = imported;
+      current = 0;
+      document.getElementById('import-msg').textContent = `インポート成功！${quizzes.length}件の問題を登録しました。`;
+      document.getElementById('import-msg').style.color = "#009900";
+      showQuestion();
+      setTimeout(hideImportArea, 1200);
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
