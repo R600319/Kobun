@@ -2,13 +2,25 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>古文単語穴埋めクイズ（スラッシュ区切りインポート）</title>
+  <title>古文単語穴埋めクイズ（シャッフル機能付き）</title>
   <style>
     body { font-family: sans-serif; background: #f7f7fa; padding: 30px; }
-    .container { background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px #ccc; max-width: 430px; margin: auto; }
+    .container {
+      background: #fff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px #ccc;
+      max-width: 530px; /* 横幅を広くしました */
+      margin: auto;
+    }
     h1 { text-align: center; }
     #result { margin-top: 14px; font-weight: bold; }
-    input[type="text"] { padding: 10px; font-size: 1.15em; width: 100%; box-sizing: border-box; }
+    input[type="text"] {
+      padding: 10px;
+      font-size: 1.15em;
+      width: 100%;
+      box-sizing: border-box;
+    }
     button {
       margin-top: 10px;
       padding: 10px 22px;
@@ -25,9 +37,20 @@
     button:hover { background: #285fa0; }
     .hint { color: #888; font-size: 0.9em; margin-top: 8px; }
     .kobun { font-size: 1.1em; margin-bottom: 10px; color: #444; }
-    #question { font-size: 1.35em; margin-bottom: 6px; font-weight: bold; color: #222; }
+    #question {
+      font-size: 1.35em;
+      margin-bottom: 6px;
+      font-weight: bold;
+      color: #222;
+    }
     #import-area { margin: 24px 0; }
-    textarea { width: 100%; height: 80px; box-sizing: border-box; font-size: 1.05em; padding: 8px; }
+    textarea {
+      width: 100%;
+      height: 80px;
+      box-sizing: border-box;
+      font-size: 1.05em;
+      padding: 8px;
+    }
     #import-msg { color: #009900; font-size: 0.95em; margin-top: 4px; }
     #import-area { display: none; }
     .btn-row { margin-top: 10px; text-align: left; }
@@ -59,6 +82,7 @@
       <button onclick="checkAnswer()">答える</button>
       <button onclick="nextQuestion()">次の問題</button>
       <button id="import-show-btn" onclick="showImportArea()">インポート</button>
+      <button onclick="shuffleQuiz()">シャッフル</button>
     </div>
     <div id="result"></div>
     <div class="hint" id="hint"></div>
@@ -147,6 +171,17 @@
       document.getElementById('import-msg').style.color = "#009900";
       showQuestion();
       setTimeout(hideImportArea, 1200);
+    }
+
+    function shuffleQuiz() {
+      if (quizzes.length <= 1) return;
+      // Fisher–Yates shuffle
+      for (let i = quizzes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [quizzes[i], quizzes[j]] = [quizzes[j], quizzes[i]];
+      }
+      current = 0;
+      showQuestion();
     }
 
     showQuestion();
